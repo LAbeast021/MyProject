@@ -91,27 +91,52 @@ namespace Server.Controllers
 
 
 
-        // POST: api/Posts/test
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost("test")]
-        public IActionResult PostText([FromBody] string text)
+        public class PostTestDto
         {
-            if (string.IsNullOrEmpty(text))
+            public string Content { get; set; }
+            public int UserId { get; set; }
+        }
+        // POST: api/Posts/test
+        [HttpPost("newpost")]
+        public async Task<ActionResult<Post>> CreatePost([FromBody] PostTestDto postDto)
+        {
+            if (postDto == null || string.IsNullOrEmpty(postDto.Content))
             {
-                return BadRequest("No text provided");
+                return BadRequest("Content is required.");
             }
-            return Ok(new { ReceivedText = text });
+
+            var newPost = new Post
+            {
+                UserId = postDto.UserId, // Ensure this is securely handled
+                Content = postDto.Content,
+                CreatedAt = DateTime.UtcNow,
+                LikesCount = 0 // Initially, there are no likes
+            };
+
+            _context.Posts.Add(newPost);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetPost), new { id = newPost.PostId }, newPost);
         }
 
 
         // POST: api/Posts
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Post>> PostPost(Post post)
+        public async Task<ActionResult<Post>> PostPost(Post postDto)
+
         {
-            _context.Posts.Add(post);
+            var newpost = new Post
+            {
+                Content = postDto.Content,
+                ImageUrl = postDto.ImageUrl,
+                UserId = postDto.UserId, // Assuming you have a method to extract user id from the token
+                CreatedAt = DateTime.UtcNow , 
+                LikesCount = postDto.LikesCount,
+            };
+            _context.Posts.Add(newpost);
             await _context.SaveChangesAsync();
-            return CreatedAtAction("GetPost", new { id = post.PostId }, post);
+            return CreatedAtAction("GetPost", new { id = newpost.PostId }, newpost);
 
         }
 

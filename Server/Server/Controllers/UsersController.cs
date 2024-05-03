@@ -50,7 +50,6 @@ namespace Server.Controllers
         //=============================================================================================================================================
         // New GET method to return a message
 
-        [Authorize]
         [HttpGet("logedinuser")]
         public async Task<IActionResult> GetLoggedInUser()
         {
