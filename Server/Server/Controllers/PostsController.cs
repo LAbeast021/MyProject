@@ -41,6 +41,23 @@ namespace Server.Controllers
             return post;
         }
 
+        //===============================================================================================================
+        // GET: api/Posts/user/5
+        [HttpGet("user/{userId}")]
+        public async Task<ActionResult<IEnumerable<Post>>> GetPostsByUser(int userId)
+        {
+            var posts = await _context.Posts.Where(p => p.UserId == userId).ToListAsync();
+
+            if (!posts.Any())
+            {
+                return Ok(new List<Post>());  // Return an empty list instead of a 404 error
+            }
+
+            return Ok(posts);
+        }
+
+        //===============================================================================================================
+
         // PUT: api/Posts/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]

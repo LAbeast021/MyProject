@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using Server.Models;
 using Microsoft.AspNetCore.Authentication.Google;
 using Google.Apis.Auth;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Server.Controllers
 {
@@ -43,10 +45,14 @@ namespace Server.Controllers
             return user;
         }
 
+
+        //============================================================================================================================================
+        //=============================================================================================================================================
         // New GET method to return a message
 
-        [HttpGet("message")]
-        public async Task<IActionResult> GetMessage()
+        [Authorize]
+        [HttpGet("logedinuser")]
+        public async Task<IActionResult> GetLoggedInUser()
         {
             var token = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
 
@@ -61,7 +67,15 @@ namespace Server.Controllers
                 var payload = await ValidateToken(token);
                 if (payload != null)
                 {
-                    return Ok(new { message = $"Hello from the backend, {payload.Name}!", email = payload.Email , user = payload });
+                    var user = await FindOrCreateUser(payload);
+                    var userForFrontEnd = new
+                    {
+                        UserId = user.UserId,
+                        Username = user.Username,
+                        ProfilePicture = user.ProfilePicture
+                    };
+
+                    return Ok(new { message = $"Hello from the backend, {user.Username}!", email = user.Email, user = userForFrontEnd });
                 }
                 else
                 {
@@ -72,6 +86,26 @@ namespace Server.Controllers
             {
                 return Unauthorized($"Invalid token: {ex.Message}");
             }
+        }
+
+
+        private async Task<User> FindOrCreateUser(GoogleJsonWebSignature.Payload payload)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.GoogleId == payload.Subject);
+            if (user == null)
+            {
+                user = new User
+                {
+                    GoogleId = payload.Subject,
+                    Email = payload.Email,
+                    Username = payload.Name,  // Adjust based on actual data
+                    ProfilePicture = payload.Picture,
+                    CreatedAt = DateTime.Now
+                };
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+            }
+            return user;
         }
 
         private async Task<GoogleJsonWebSignature.Payload> ValidateToken(string token)
@@ -92,8 +126,9 @@ namespace Server.Controllers
                 return null;
             }
         }
-
+        //============================================================================================================================================
         //=============================================================================================================================================
+
         // PUT: api/Users/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
