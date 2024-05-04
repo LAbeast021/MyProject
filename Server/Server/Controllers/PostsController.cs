@@ -57,6 +57,24 @@ namespace Server.Controllers
         }
 
         //===============================================================================================================
+        [HttpGet("feed/{userId}")]
+        public async Task<ActionResult<IEnumerable<Post>>> GetFeedPosts(int userId)
+        {
+            var posts = await _context.Posts
+                .Where(p => p.UserId != userId)
+                .ToListAsync();
+
+            if (posts == null || !posts.Any())
+            {
+                return NotFound("No posts found.");
+            }
+
+            return posts;
+        }
+
+
+
+        //===============================================================================================================
 
         // PUT: api/Posts/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -94,6 +112,7 @@ namespace Server.Controllers
         public class PostTestDto
         {
             public string Content { get; set; }
+            public string UserName { get; set; }
             public int UserId { get; set; }
         }
         // POST: api/Posts/test
@@ -110,7 +129,8 @@ namespace Server.Controllers
                 UserId = postDto.UserId, // Ensure this is securely handled
                 Content = postDto.Content,
                 CreatedAt = DateTime.UtcNow,
-                LikesCount = 0 // Initially, there are no likes
+                LikesCount = 0, // Initially, there are no likes
+                UserName = postDto.UserName
             };
 
             _context.Posts.Add(newPost);

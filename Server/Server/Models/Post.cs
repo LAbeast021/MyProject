@@ -9,6 +9,8 @@ public partial class Post
 
     public int UserId { get; set; }
 
+    public string UserName { get; set; }
+
     public string Content { get; set; } = null!;
 
     public string? ImageUrl { get; set; }
