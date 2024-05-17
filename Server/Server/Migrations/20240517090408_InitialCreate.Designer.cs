@@ -12,8 +12,8 @@ using Server.Models;
 namespace Server.Migrations
 {
     [DbContext(typeof(ChiziBegooContext))]
-    [Migration("20240504073533_AddUserNameToPosts")]
-    partial class AddUserNameToPosts
+    [Migration("20240517090408_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
